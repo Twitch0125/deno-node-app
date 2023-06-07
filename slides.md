@@ -90,6 +90,100 @@ routes/
 </template>
 
 ---
+layout: center
+---
+# Deno tries to act like a browser
+which has some pros and cons
+
+---
+layout: statement
+---
+# Package Management
+A couple ways of dependency management
+
+---
+# Deps.ts
+
+<v-click>
+
+Recommended for libraries since it can be overidden by an import_map
+
+```ts
+//deps.ts
+export { ensureDir } from 'https://deno.land/std@0.190.0/fs/mod.ts'
+export { readableStreamFromReader, readerFromReadableStream } from 'https://deno.land/std@0.190.0/streams/mod.ts'
+
+//main.ts
+import { ensureDir, readableSteamFromReader } from './deps.ts'
+```
+
+</v-click>
+
+---
+
+
+# import_map.json
+
+<v-click>
+
+The "final say" in what version of a package to use. Recommended for Apps.
+
+```json
+{
+  "imports":{
+    "https://deno.land/std@0.177.0/": "https://deno.land/std@0.190.0/",
+    "fs": "https://deno.land/std@0.190.0/fs/mod.ts",
+    "streams": "https://deno.land/std@0.190.0/streams/mod.ts",
+    "templates/": "./templates/"
+  },
+  "scopes": {
+    "https://deno.land/x/thingy/": {
+      "https://deno.land/std@0.177.0/": "./patched/"
+    }
+  }
+}
+```
+```js
+import { ensureDir } from 'fs'
+import { readableStreaFromReader } from 'streams'
+import { UploadPage } from './templates/upload.js'
+```
+
+</v-click>
+
+---
+
+# package.json
+
+<v-click>
+
+Nice if you're migrating to Deno, but who does that?
+
+Installs into a node_modules directory so you can run things with npm.
+
+Doesn't FULLY support package.json. You can only run "basic" commands. So I couldn't have Unocss running with Deno, I had to use node or bun for that.
+
+</v-click>
+
+---
+layout: center
+---
+
+# Packages are pulled at runtime
+Like a browser!
+ 
+As the browser parses the `<script>`s and `<link>`s it downloads them
+
+As deno parses `import`s it downloads them [^1]
+
+
+Node you'd do that all ahead of time with `npm install`
+
+[^1]: You can cache ahead of time, but I've had issues with that...
+
+<!-- It can be hard to specify every single file that might have a dependency. If a library doesn't use deps.ts then you're stuck downloading at runtime -->
+
+---
 
 # Serving static files
 
@@ -114,8 +208,7 @@ export const handler: Handlers = {
     return await serveDir(req, { fsRoot: Deno.cwd() + "/extracted/news/html", quiet: true });
   }
 };
-
-````
+```
 <!--
 the `Deno` object is a global helper/namespace for Deno apis separate from the std library.
 -->
@@ -130,7 +223,7 @@ the `Deno` object is a global helper/namespace for Deno apis separate from the s
 Intuitive duck typing!
 <v-clicks>
 
-Like how a promise implements a `then()` method:
+Like how a `Thenable` implements a `then()` method:
 
 ```js
 const myPromise = {
@@ -191,11 +284,11 @@ layout: two-cols
 
 # The Node App
 
-## Uses the [Nitro](https://fresh.deno.dev) framework
+## Uses the [Nitro](https://nitro.unjs.io) framework
 
-- Typescript
-- Templates with JSX
-- Interactive component "islands" with Preact
+- Javascript
+- Templates with HTM (tagged templatel literals)
+- Interactive components with Alpine.js
 - File-based routing
 
 ```txt
@@ -211,3 +304,7 @@ routes/
     <logos-nodejs-icon class="text-10rem text-center" />
   </div>
 </template>
+
+---
+
+# TODO: Node still king of dev tooling
