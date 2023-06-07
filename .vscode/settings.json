@@ -1,0 +1,14 @@
+{
+    "frontMatter.framework.id": "nuxt",
+    "frontMatter.content.publicFolder": "static",
+    "frontMatter.preview.host": "http://localhost:3000",
+    "frontMatter.content.pageFolders": [
+        {
+            "title": "pages",
+            "path": "[[workspace]]/pages"
+        }
+    ],
+    "frontMatter.taxonomy.tags": [],
+    "frontMatter.taxonomy.categories": [],
+    "prettier.enable": false
+}
