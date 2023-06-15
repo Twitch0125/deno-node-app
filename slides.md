@@ -21,11 +21,6 @@ A show-and-tell of a somewhat simple app
 The last comment block of each slide will be treated as slide notes. It will be visible and editable in Presenter Mode along with the slide. [Read more in the docs](https://sli.dev/guide/syntax.html#notes)
 -->
 
----
-
-# Table of contents
-
-<Toc></Toc>
 
 ---
 layout: center
@@ -60,7 +55,30 @@ scale: 0.5
 2. extract and save the files in the .tar.gz
 3. serve the extracted files
 4. Be able to host on a server for free (or close to free)
-5. Use Web Standards whenever possible
+5. Use Web Standard APIs whenever possible
+
+---
+layout: two-cols
+---
+
+# Deno <logos-deno class="text-2rem text-center" />
+- Initial release: May 15 2018
+- Written in Rust
+- Web standards focused
+- Browser-like <v-click> <small class="opacity-60 italic"> I'll explain later </small> </v-click>
+- First-class tooling, typescript, std library
+
+<template #right>
+
+# Node <logos-nodejs-icon class="text-2rem text-center" />
+- Initial release: May 16, 2009
+- Written in C/C++
+- Common JS
+- Minimal "std library"
+- NPM
+</template>
+
+<!-- Web standards means everything is probably on MDN -->
 
 ---
 layout: two-cols
@@ -68,19 +86,20 @@ layout: two-cols
 
 # The Deno App
 
-## Uses Deno's [Fresh](https://fresh.deno.dev) framework
+## Uses the [Hono](https://hono.dev/) framework
+A framework for the "Edge"
 
 - Typescript
 - Templates with JSX
-- Interactive component "islands" with Preact
-- File-based routing
+- No build step
 
-```txt
-routes/
- ┣ [...path].ts
- ┣ index.ts
- ┗ upload.tsx
+```ts
+import { Hono } from 'https://deno.land/x/hono/mod.ts'
+const app = new Hono()
+
+app.get('/', (c) => c.text('Hono!'))
 ```
+
 
 <template #right>
 
@@ -89,11 +108,6 @@ routes/
   </div>
 </template>
 
----
-layout: center
----
-# Deno tries to act like a browser
-which has some pros and cons
 
 ---
 layout: statement
@@ -102,6 +116,7 @@ layout: statement
 A couple ways of dependency management
 
 ---
+ 
 # Deps.ts
 
 <v-click>
@@ -164,7 +179,24 @@ Nice if you're migrating to Deno, but who does that?
 
 Installs into a node_modules directory so you can run things with npm.
 
-Doesn't FULLY support package.json. You can only run "basic" commands. So I couldn't have Unocss running with Deno, I had to use node or bun for that.
+Only works with packages from npm.
+
+Doesn't FULLY support package.json. You can only run "basic" commands, though I don't exactly know what that means. I could run UnoCSS soooooo...
+
+```ts
+//package.json
+{
+  "dependencies":{
+    "hono": "latest"
+  }
+}
+
+//app.ts
+import { Hono } from 'hono'
+const app = new Hono()
+
+```
+
 
 </v-click>
 
@@ -179,12 +211,11 @@ As the browser parses the `<script>`s and `<link>`s it downloads them
 
 As deno parses `import`s it downloads them [^1]
 
+With Node you'd do that all ahead of time with `npm install`
 
-Node you'd do that all ahead of time with `npm install`
+[^1]: You can cache ahead of time with `deno cache`, but I've had issues with getting it to cache *everything*
 
-[^1]: You can cache ahead of time, but I've had issues with that...
-
-<!-- It can be hard to specify every single file that might have a dependency. If a library doesn't use deps.ts then you're stuck downloading at runtime -->
+<!-- It can be hard to specify every single file that might have a dependency. Fresh for example kept downloading some Preact related package at runtime.-->
 
 ---
 
@@ -193,97 +224,133 @@ Node you'd do that all ahead of time with `npm install`
 Deno made this easy. Here's the route that serves static files from the
 `./extracted` directory
 
-<div>
-```txt {1,2}
-routes/
- ┣ [...path].ts
- ┣ index.ts
- ┗ upload.tsx
-```
-</div>
+```ts
+import { serveDir } from "https://deno.land/std/http/file_server.ts"; //Deno's std static file server
 
-```ts {4-20|1,2|all}
-import { Handlers } from "$fresh/server.ts"; // `$fresh/` is defined in an import map
-import { serveDir } from "file_server"; //Deno's std static file server
-
-export const handler: Handlers = { 
-  async GET(req) { 
-    return await serveDir(req, { fsRoot: Deno.cwd() + "/extracted/news/html", quiet: true });
-  }
-};
+Deno.serve(req => serveDir(req, { fsRoot: Deno.cwd() + "/extracted/news/html", quiet: true }))
 ```
+
 <!--
-the `Deno` object is a global helper/namespace for Deno apis separate from the std library.
+the `Deno` object is a global helper/namespace for Deno apis separate from the std library
+Hono actually provides a helper for static files, but this works too.
 -->
 
 ---
 
-# TODO: HTML Rendering
+# HTML Rendering
 
+<v-click>
+
+JSX 🤢
+
+```tsx
+import { BasePage } from "templates/base.tsx";
+import { FileUpload } from "components/FileUpload.tsx";
+
+export const UploadPage = (props: { message?: string } = {}) => (
+  <BasePage>
+    <form
+      x-data="{file: null, loading: false}"
+      action="/upload"
+      method="POST"
+      enctype="multipart/form-data"
+      {...{ "@submit": "loading=true" }} /* WHYYYYY */
+    >
+    ...
+    </form>
+  </BasePage>
+);
+```
+
+```ts
+import { UploadPage } from "templates/upload.tsx";
+
+app.get( "/upload" ,basicAuth({ username: "admin", password: Deno.env.get("AUTH_PASSWORD") }),
+  (ctx) => {
+    return ctx.html(render(UploadPage()));
+  },
+);
+
+```
+</v-click>
+
+<!-- Deno.env.get is Deno's builtin environment variables stuff -->
+
+---
+layout: center
+---
+
+# Don't forget to do this to get JSX to work
+
+```jsonc
+//deno.jsonc
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  }
+```
 ---
 
 # Web Streams are the default in Deno. They're nice.
-Intuitive duck typing!
+- You can pipe ReadableStreams to WritableStreams
+- WritableStreams need to be closed
+- You can read from StreamReaders
+- You can write to StreamWriters
+- TransformStreams have a StreamReader and StreamWriter to read and write
+
 <v-clicks>
 
-Like how a `Thenable` implements a `then()` method:
-
 ```js
-const myPromise = {
-  then: function(){}
+const writableStream = new WritableStream()
+const writer = writableStream.getWriter()
+const readableStream = new ReadableStream()
+
+const transformer = new TransformStream()
+
+const reader = readableStream.pipeThrough(transformer).getReader()
+
+for await (const chunk of reader.read()){
+  writer.write(chunk)  
 }
-```
+writer.close()
 
-A reader implements a `reader()` method
+// await readableStream.pipeTo(writableStream)
 
-```js
-const myReader = {
-  reader: function() {}
-}
-```
-
-A writer implements a `write()` method
-
-```js
-const myWriter = {
-  write: function () {},
-};
 ```
 </v-clicks>
 
 ---
 
-# But are also kinda weird...
+# How I used streams
 
-There are Readers/Writers and Stream Readers/Writers, but they're not always interchangable. There's also some weird naming going on...
+```js {1-3|1-9|1-16|17-35|all}
+const fsFile = await Deno.create(Deno.cwd() + "/uploads/report.tar.gz");
+await file.stream().pipeTo(fsFile.writable) //this writes the report.tar.gz file
 
-```js {1-4|1-13}
+//get a FsFile for our newly created file
 const uploadedFile = await Deno.open(
   Deno.cwd() + "/uploads/report.tar.gz",
   { read: true },
 );
 
-//uploadFile.readable is a ReadableStream
+await ensureDir(Deno.cwd() + "/extracted");
+//uploadedFile.readable is a ReadableStream so we can pipe it to writable streams
 const gzipReader = uploadedFile.readable.pipeThrough(
-  new DecompressionStream("gzip"),
+  new DecompressionStream("gzip"), //DecompressionStream is a TransformableStream
 )
-  .getReader() //getReader returns a ReadableStreamDefaultReader or a "StreamReader", not a "Reader"
-
-//get a Reader from a StreamReader
+  .getReader()
 const untar = new Untar(readerFromStreamReader(gzipReader));
-for await (const entry of untar) { ... }
+for await (const entry of untar) { //async iteration of untar
+  if (entry.type === "file") {
+    await ensureFile(`${Deno.cwd()}/extracted/${entry.fileName}`);
+    const writer = await Deno.create(
+      `${Deno.cwd()}/extracted/${entry.fileName}`,
+    );
+    await copy(entry, writer);
+    writer.close();
+  }
+}
 ```
-
-
----
-
-# ✅ import maps
-
-I like import maps. Tooling could be better
-
----
-layout: two-cols
----
 
 ---
 
@@ -295,20 +362,23 @@ layout: two-cols
   - If you try to use a module it should say "hey this was moved to its own std library!"
 - std/node vanished?
 
+---
+
 # The Node App
 
-## Uses the [Nitro](https://nitro.unjs.io) framework
+## Uses the [Hono](https://hono.dev/) framework
+A framework for the "Edge"
 
 - Javascript
-- Templates with HTM (tagged templatel literals)
-- Interactive components with Alpine.js
-- File-based routing
+- Templates with [HTM](https://github.com/developit/htm)
+- No build step
 
-```txt
-routes/
- ┣ [...path].ts
- ┣ index.ts
- ┗ upload.tsx
+```ts
+import { Hono } from 'hono'
+import html from '#html'
+const app = new Hono()
+
+app.get('/', (c) => c.html(html`<h1>'Hono!'</h1>`))
 ```
 
 <template #right>
@@ -320,4 +390,75 @@ routes/
 
 ---
 
-# TODO: Node still king of dev tooling
+# Subpath Imports
+
+I discovered this while trying to find if Node supported something like importmaps. They fix having to figure out the relative import path of a module.
+
+No more '../../../db/tables/something' paths!
+
+Has to start with a '#'.
+
+```json{1,4-10}
+//package.json
+{
+  "dependencies": {...},
+  "imports": {
+    "#html": "./templates/html.js",
+    "#templates/*": "./templates/*",
+    "#components/*": "./templates/components/*"
+  }
+}
+```
+
+```js
+//templates/components/MessageComponent.js
+import html from '#html'
+
+export default function MessageComponent(){
+  return html`<h1> Message! </h1>
+}
+```
+
+---
+
+# TODO: Rendering with HTM
+
+---
+
+# TODO: Node streams
+
+---
+
+# TODO: How I used node streams
+
+---
+layout: two-cols
+title: Final Comparisons
+---
+
+
+## Deno
+
+Lower peak memory usage
+- peaked around 190ish MB
+
+Fewer 3rd party dependencies
+- hono
+- preact
+- preact-render-to-string
+
+<template #right>
+
+## Node
+
+Higher peak memory usage
+- peaked around 210ish MB
+
+More 3rd party dependencies
+- hono
+- htm
+- vhtml
+- fs-extra
+- tar-stream
+
+</template>
