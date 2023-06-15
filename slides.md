@@ -40,7 +40,7 @@ Not a node/deno expert.
 </div>
 
 <!--
-Here is another comment.
+I'm still learning Node and Deno.
 -->
 
 ---
@@ -61,26 +61,32 @@ scale: 0.5
 
 ---
 layout: two-cols
+title: What is Node/Deno
 ---
 
 # Deno <logos-deno class="text-2rem text-center" />
 - Initial release: May 15 2018
 - Written in Rust
 - Web standards focused
-- Browser-like <v-click> <small class="opacity-60 italic"> I'll explain later </small> </v-click>
+- Robust std lib inspired by Golang's std lib
 - First-class tooling, typescript, std library
+- Browser-like packackge management <v-click> <small class="opacity-60 italic"> I'll explain later </small> </v-click>
+
 
 <template #right>
 
 # Node <logos-nodejs-icon class="text-2rem text-center" />
 - Initial release: May 16, 2009
 - Written in C/C++
-- Common JS
-- Minimal "std library"
+- Node APIs but supports many Web Standards
+- Minimal node:modules provided
+- Some built in tooling (test runner)
 - NPM
 </template>
 
-<!-- Web standards means everything is probably on MDN -->
+<!--
+Web standards means everything is probably on MDN
+-->
 
 ---
 layout: two-cols
@@ -115,10 +121,18 @@ app.get('/', (c) => c.text('Hono!'))
 ---
 layout: statement
 ---
-# Package Management
-A couple ways of dependency management
+
+# Package Management in Deno
+There's a couple ways of doing it
+
+It's kinda weird
+
+<!--
+Deno's package management was kind of weird to get used to.
+-->
 
 ---
+
  
 # Deps.ts
 
@@ -169,7 +183,7 @@ import { UploadPage } from './templates/upload.js'
 
 </v-click>
 
-<!-- There's jspm.io which is a sort of package manager for import_maps, but its more meant for moving your package.json over to an import_map.
+<!-- There's [jspm.io](https://jspm.org) which is a sort of package manager for import_maps, but its more meant for moving your package.json over to an import_map.
  It also has issues if you use "imports" like "./templates/" because its trying to install those paths -->
 
 ---
@@ -277,7 +291,6 @@ app.get( "/upload" ,basicAuth({ username: "admin", password: Deno.env.get("AUTH_
 ```
 </v-click>
 
-<!-- Deno.env.get is Deno's builtin environment variables stuff -->
 
 ---
 layout: center
@@ -361,8 +374,6 @@ return ctx.html(render(UploadPage({ message: "Upload successful!" })));
   - It felt like 50% of the Stack Overflow posts I read were outdated and were only a year or so old
 - Deno.MODULE being moved to its own `std/` lib without any deprecation notice in the code
   - If you try to use a module it should say "hey this was moved to its own std library!"
-- std/node vanished?
-
 ---
 
 # The Node App
@@ -518,7 +529,7 @@ return ctx.html(UploadPage({ message: "Upload successful!" }));
 # Node frustrations
 - Callbacks are still fairly common, less async/await syntax
 - Node streams are more complex than web streams
-- CommonJS is still very common
+- CommonJS is still very common and makes writing ESM code frustrating
 
 
 ---
@@ -534,13 +545,9 @@ Lower peak memory usage
 
 Fewer 3rd party dependencies
 - hono
-- preact
-- preact-render-to-string
+- preact (or htm)
+- preact-render-to-string (or vhtml)
 
-Extraction: ~6.6 seconds
-Static file req/s: ~969
-/html req/s: ~42240 (41577 jsx)
-/upload req/s: ~18594 (23434 jsx)
 
 <template #right>
 
@@ -556,11 +563,15 @@ More 3rd party dependencies
 - fs-extra
 - tar-stream
 
-Extraction: ~6.0 seconds
-Static file req/s: ~2439
-/html req/s: ~7264
-/upload req/s: ~5841
-
 </template>
 
 <!-- seems that jsx scales a little better than HTM in deno -->
+
+---
+title: Performance
+---
+
+|Runtime| extraction (~s) | static file (~req/s) | /html (~req/s)       | /upload (~req/s)    |
+|-------|------------|-------------------|-------------------|------------------|
+| Deno  | 6.6s      | 969              | 42240 (41577 jsx)| 18594 (23434jsx)|
+| Node  | 6.0s      | 2439             | 7264             | 5841            |
