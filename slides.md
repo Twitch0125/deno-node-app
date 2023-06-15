@@ -91,8 +91,9 @@ layout: two-cols
 ## Uses the [Hono](https://hono.dev/) framework
 A framework for the "Edge"
 
-- Typescript
-- Templates with JSX
+I did one in JS and HTM, and one with TS and JSX
+- Typescript (and Javascript)
+- Templates with JSX (and HTM)
 - No build step
 
 ```ts
@@ -536,6 +537,11 @@ Fewer 3rd party dependencies
 - preact
 - preact-render-to-string
 
+Extraction: ~6.6 seconds
+Static file req/s: ~969
+/html req/s: ~42240 (41577 jsx)
+/upload req/s: ~18594 (23434 jsx)
+
 <template #right>
 
 ## Node
@@ -550,4 +556,11 @@ More 3rd party dependencies
 - fs-extra
 - tar-stream
 
+Extraction: ~6.0 seconds
+Static file req/s: ~2439
+/html req/s: ~7264
+/upload req/s: ~5841
+
 </template>
+
+<!-- seems that jsx scales a little better than HTM in deno -->
