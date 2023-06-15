@@ -60,7 +60,7 @@ scale: 0.5
 2. extract and save the files in the .tar.gz
 3. serve the extracted files
 4. Be able to host on a server for free (or close to free)
-
+5. Use Web Standards whenever possible
 
 ---
 layout: two-cols
@@ -150,6 +150,9 @@ import { UploadPage } from './templates/upload.js'
 ```
 
 </v-click>
+
+<!-- There's jspm.io which is a sort of package manager for import_maps, but its more meant for moving your package.json over to an import_map.
+ It also has issues if you use "imports" like "./templates/" because its trying to install those paths -->
 
 ---
 
@@ -281,6 +284,16 @@ I like import maps. Tooling could be better
 ---
 layout: two-cols
 ---
+
+---
+
+# Deno frustrations
+
+- Frequent breaking API changes
+  - It felt like 50% of the Stack Overflow posts I read were outdated and were only a year or so old
+- Deno.MODULE being moved to its own `std/` lib without any deprecation notice in the code
+  - If you try to use a module it should say "hey this was moved to its own std library!"
+- std/node vanished?
 
 # The Node App
 
