@@ -537,7 +537,6 @@ layout: two-cols
 title: Final Comparisons
 ---
 
-
 ## Deno
 
 Lower peak memory usage
@@ -565,13 +564,28 @@ More 3rd party dependencies
 
 </template>
 
-<!-- seems that jsx scales a little better than HTM in deno -->
+<!--
+Memory usage is probably pretty close, this was just measuring on Fly.io
+-->
 
 ---
 title: Performance
 ---
 
+Hono has to be doing something weird here...
+
 |Runtime| extraction (~s) | static file (~req/s) | /html (~req/s)       | /upload (~req/s)    |
 |-------|------------|-------------------|-------------------|------------------|
 | Deno  | 6.6s      | 969              | 42240 (41577 jsx)| 18594 (23434jsx)|
 | Node  | 6.0s      | 2439             | 7264             | 5841            |
+
+<!--
+Why is node's numbers so low for html requests???
+Why is Deno's so low for static files?!?!?
+-->
+
+---
+layout: end
+---
+
+# Fin
