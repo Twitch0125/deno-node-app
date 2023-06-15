@@ -35,6 +35,8 @@ https://twitch0125.github.io
 My name is Kaleb Ercanbrack. I do JavaScript development, mostly frontend but
 I've been learning a lot of Backend JS lately.
 
+Not a node/deno expert.
+
 </div>
 
 <!--
@@ -237,7 +239,7 @@ Hono actually provides a helper for static files, but this works too.
 
 ---
 
-# HTML Rendering
+# HTML Rendering with JSX
 
 <v-click>
 
@@ -321,24 +323,21 @@ writer.close()
 
 ---
 
-# How I used streams
+# Using web streams
 
-```js {1-3|1-9|1-16|17-35|all}
+```js {1-2|3-7|8-12|13-35|all}
 const fsFile = await Deno.create(Deno.cwd() + "/uploads/report.tar.gz");
 await file.stream().pipeTo(fsFile.writable) //this writes the report.tar.gz file
-
 //get a FsFile for our newly created file
 const uploadedFile = await Deno.open(
   Deno.cwd() + "/uploads/report.tar.gz",
   { read: true },
 );
-
 await ensureDir(Deno.cwd() + "/extracted");
 //uploadedFile.readable is a ReadableStream so we can pipe it to writable streams
 const gzipReader = uploadedFile.readable.pipeThrough(
   new DecompressionStream("gzip"), //DecompressionStream is a TransformableStream
-)
-  .getReader()
+).getReader()
 const untar = new Untar(readerFromStreamReader(gzipReader));
 for await (const entry of untar) { //async iteration of untar
   if (entry.type === "file") {
@@ -350,6 +349,7 @@ for await (const entry of untar) { //async iteration of untar
     writer.close();
   }
 }
+return ctx.html(render(UploadPage({ message: "Upload successful!" })));
 ```
 
 ---
@@ -396,6 +396,8 @@ I discovered this while trying to find if Node supported something like importma
 
 No more '../../../db/tables/something' paths!
 
+<v-click>
+
 Has to start with a '#'.
 
 ```json{1,4-10}
@@ -419,17 +421,104 @@ export default function MessageComponent(){
 }
 ```
 
----
-
-# TODO: Rendering with HTM
+</v-click>
 
 ---
 
-# TODO: Node streams
+# HTML Rendering with HTM
+I **LOVE** HTM!
+
+<v-click>
+
+```js
+//templates/html.js
+import htm from "htm";
+import vhtml from "vhtml";
+export const html = htm.bind(vhtml);
+```
+
+```js
+export const UploadPage = (props = {}) =>
+  html`
+    <${BasePage}>
+      <form
+        x-data="{file: null, loading: false}"
+        action="/upload"
+        method="POST"
+        enctype="multipart/form-data"
+        @submit="loading=true"
+      >
+        <${FileUpload} name="file" />
+        ${props.message && html`<p>${props.message}</p>`}
+      </form>
+    <//>
+  `;
+
+```
+
+</v-click>
+
 
 ---
 
-# TODO: How I used node streams
+# Node streams
+Node has its own streams and they dominate the node ecosystem.
+
+<v-click>
+
+
+```js
+const writable = new Writable()
+writable.pipe()
+writable.write()
+const readable = new Readable()
+readable.pipe()
+readable.read()
+const duplex = new Duplex()
+duplex.pipe()
+duplex.write()
+duplex.read()
+```
+
+</v-click>
+
+---
+
+# Using node streams
+
+```js {1-8|9-13|14-20|21-23|all}
+await ensureDir("./uploads"); //ensureX functions are from `fs-extra`
+await ensureFile("./uploads/report.tar.gz");
+const fileWritableStream = Writable.toWeb( //You can convert node streams to Web Streams
+  createWriteStream("./uploads/report.tar.gz", { //a WriteStream implements a Writable
+    flags: "w",
+  })
+);
+await file.stream().pipeTo(fileWritableStream) //our file is written and saved
+const uploadedFileReadStream = createReadStream("./uploads/report.tar.gz", { //a ReadStream implements a Readable
+  flags: "r",
+});
+const untar = extract(); //from the `tar-stream` package. Writable
+const gunzip = createGunzip(); //from `node:zlib`. Transform stream!
+untar.on("entry", async function (header, stream, next) {
+  stream.on("end", () => next());
+  const filePath = header.name;
+  await ensureFile("./extracted/" + filePath);
+  await writeFile("./extracted/" + filePath, stream);
+  stream.end();
+});
+uploadedFileReadStream.pipe(gunzip).pipe(untar);
+await finished(uploadedFileReadStream); //from node:stream/promises
+return ctx.html(UploadPage({ message: "Upload successful!" }));
+```
+
+---
+
+# Node frustrations
+- Callbacks are still fairly common, less async/await syntax
+- Node streams are more complex than web streams
+- CommonJS is still very common
+
 
 ---
 layout: two-cols
